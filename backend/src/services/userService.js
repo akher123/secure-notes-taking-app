@@ -1,12 +1,7 @@
 const mongoose = require('mongoose');
 const User = require('../models/User');
 const { parsePagination, buildMeta } = require('../utils/pagination');
-
-function httpError(status, message) {
-    const error = new Error(message);
-    error.status = status;
-    return error;
-}
+const ApiError = require('../utils/ApiError');
 
 function toPublicUser(user) {
     return {
@@ -47,29 +42,29 @@ async function createUser({ name, email, password, role, interests }) {
 
 async function getUserById(requester, id) {
     if (!mongoose.isValidObjectId(id)) {
-        throw httpError(404, 'User not found');
+        throw new ApiError(404, 'User not found', 'NOT_FOUND');
     }
 
     const isSelf = String(requester.id) === String(id);
     if (requester.role !== 'admin' && !isSelf) {
-        throw httpError(403, 'Forbidden');
+        throw new ApiError(403, 'Forbidden', 'FORBIDDEN');
     }
 
     const user = await User.findById(id);
     if (!user) {
-        throw httpError(404, 'User not found');
+        throw new ApiError(404, 'User not found', 'NOT_FOUND');
     }
     return toPublicUser(user);
 }
 
 async function updateUser(id, updates) {
     if (!mongoose.isValidObjectId(id)) {
-        throw httpError(404, 'User not found');
+        throw new ApiError(404, 'User not found', 'NOT_FOUND');
     }
 
     const user = await User.findById(id).select('+password');
     if (!user) {
-        throw httpError(404, 'User not found');
+        throw new ApiError(404, 'User not found', 'NOT_FOUND');
     }
 
     if (updates.name !== undefined) user.name = updates.name;
@@ -84,12 +79,12 @@ async function updateUser(id, updates) {
 
 async function deleteUser(id) {
     if (!mongoose.isValidObjectId(id)) {
-        throw httpError(404, 'User not found');
+        throw new ApiError(404, 'User not found', 'NOT_FOUND');
     }
 
     const user = await User.findByIdAndDelete(id);
     if (!user) {
-        throw httpError(404, 'User not found');
+        throw new ApiError(404, 'User not found', 'NOT_FOUND');
     }
 }
 

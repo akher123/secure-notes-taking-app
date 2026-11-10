@@ -1,12 +1,7 @@
 const mongoose = require('mongoose');
 const Note = require('../models/Note');
 const { parsePagination, buildMeta } = require('../utils/pagination');
-
-function httpError(status, message) {
-    const error = new Error(message);
-    error.status = status;
-    return error;
-}
+const ApiError = require('../utils/ApiError');
 
 function toPublicNote(note) {
     return {
@@ -47,17 +42,17 @@ async function createNote(userId, { title, content }) {
 
 async function findAccessibleNote(requester, id) {
     if (!mongoose.isValidObjectId(id)) {
-        throw httpError(404, 'Note not found');
+        throw new ApiError(404, 'Note not found', 'NOT_FOUND');
     }
 
     const note = await Note.findById(id);
     if (!note) {
-        throw httpError(404, 'Note not found');
+        throw new ApiError(404, 'Note not found', 'NOT_FOUND');
     }
 
     const isOwner = String(note.userId) === String(requester.id);
     if (requester.role !== 'admin' && !isOwner) {
-        throw httpError(404, 'Note not found');
+        throw new ApiError(404, 'Note not found', 'NOT_FOUND');
     }
 
     return note;

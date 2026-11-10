@@ -1,7 +1,9 @@
+const ApiError = require('../utils/ApiError');
+
 function authorize(...roles) {
     return (req, res, next) => {
         if (!req.user || !roles.includes(req.user.role)) {
-            return res.status(403).json({ message: 'Forbidden' });
+            return next(new ApiError(403, 'Forbidden', 'FORBIDDEN'));
         }
         return next();
     };
