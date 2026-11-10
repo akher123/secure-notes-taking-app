@@ -1,6 +1,6 @@
 # Secure Note-Taking API
 
-Backend REST API for a note-taking app. Users manage their own notes. Admins manage users and can read every note. Passwords are hashed with bcrypt. Access uses JWT Bearer tokens.
+Backend REST API for a note-taking app, with a React UI in `frontend/`. Users manage their own notes. Admins manage users and can read every note. Passwords are hashed with bcrypt. Access uses JWT Bearer tokens.
 
 Interactive docs: [http://localhost:3000/api/docs](http://localhost:3000/api/docs)
 
@@ -17,6 +17,11 @@ OpenAPI JSON: [http://localhost:3000/api/docs.json](http://localhost:3000/api/do
 ## Project layout
 
 ```text
+frontend/                  Vite + React UI
+  .env.example             VITE_API_URL
+  src/api/client.js        fetch wrapper, Bearer token
+  src/auth/                login session
+  src/pages/               login, notes, users, posts, admin views
 backend/
   index.js                 starts the server
   seed.js                  demo users, notes, and posts
@@ -85,6 +90,61 @@ npm run dev
 | Admin | `admin@example.com` | `admin123` |
 
 The user account has interests `chess`, `reading`, and `programming`, two notes, and one post. The admin account has interests `security` and `technology`.
+
+## Frontend
+
+React app in `frontend/`. It uses the API above: login stores the JWT, and every later request sends `Authorization: Bearer <token>`. Start the backend and run the seed before opening the UI. The demo accounts in the table above work on the login page.
+
+Stack: Vite, React, and React Router. There is no component library. The session lives in `localStorage` (`token` and `user`). Logout clears both. A missing token, or a `401` from the API, sends the browser to `/login`.
+
+### Frontend setup
+
+From the repository root:
+
+```bash
+cd frontend
+cp .env.example .env
+npm install
+npm run dev
+```
+
+Windows PowerShell:
+
+```powershell
+cd frontend
+Copy-Item .env.example .env
+npm install
+npm run dev
+```
+
+Open [http://localhost:5173](http://localhost:5173). The dev server is [http://localhost:5173](http://localhost:5173). `npm install` is only required the first time, or after dependencies change.
+
+| Variable | Required | Purpose |
+| --- | --- | --- |
+| `VITE_API_URL` | No | API origin. Example and fallback are `http://localhost:3000` |
+
+`frontend/.env` is not committed. Change `VITE_API_URL` when the API is not on port 3000, then restart `npm run dev`. Vite reads env variables at startup.
+
+| Script | Purpose |
+| --- | --- |
+| `npm run dev` | Dev server with reload |
+| `npm run build` | Production build in `frontend/dist` |
+| `npm run preview` | Serve the production build locally |
+
+### Screens
+
+| Screen | Path | Who | API |
+| --- | --- | --- | --- |
+| Login and register | `/login` | Public | `POST /api/auth/login`, `POST /api/auth/register` |
+| My notes | `/notes` | Signed in | `GET`, `POST`, `PATCH`, `DELETE /api/notes` |
+| User posts | `/posts` | Signed in | `GET /api/users/{id}/posts` |
+| Users | `/users` | Admin | `GET`, `POST`, `PATCH`, `DELETE /api/users` |
+| All notes | `/admin/notes` | Admin | `GET /api/admin/notes` |
+| Users by interest | `/admin/analytics/users-by-interest` | Admin | `GET /api/admin/analytics/users-by-interest` |
+
+Lists use `page` and `limit=10` and show the API `meta` pager. Notes and users can be created, edited, and deleted. All notes is read-only. Users by interest shows each interest, the count, and the users in that group. User posts defaults to the signed-in user id; another id can be entered on that page.
+
+Admin links stay hidden for role `user`. Opening an admin path as a user returns to `/notes`. The API still answers `403` if that request is sent directly.
 
 ## Swagger and Bearer auth
 
