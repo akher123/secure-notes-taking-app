@@ -9,7 +9,7 @@ function requireEnv(name) {
 const env = {
     MONGO_URL: requireEnv('MONGO_URL'),
     PORT: Number(process.env.PORT) || 3000,
-    JWT_SECRET: process.env.JWT_SECRET,
+    JWT_SECRET: requireEnv('JWT_SECRET'),
     JWT_EXPIRES_IN: process.env.JWT_EXPIRES_IN || '7d',
 };
 
